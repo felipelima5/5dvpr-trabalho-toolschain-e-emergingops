@@ -22,6 +22,6 @@ data "aws_subnets" "public" {
 }
 
 locals {
-  subnets = data.aws_subnets.this.ids[*]
+  subnets        = data.aws_subnets.this.ids[*]
   public_subnets = data.aws_subnets.public.ids[*]
 }
