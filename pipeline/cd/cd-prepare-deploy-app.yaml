@@ -1,0 +1,9 @@
+version: 0.2
+phases:
+  build:
+      commands:
+          - printf '[{"name":"edm-supervisor-dev-us-east-1","imageUri":"143653603140.dkr.ecr.us-east-1.amazonaws.com/edm-api-dev-us-east-1:latest"}]' > imagedefinitions.json
+
+artifacts:
+  files:
+      - imagedefinitions.json

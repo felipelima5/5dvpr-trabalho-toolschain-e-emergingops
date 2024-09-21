@@ -1,0 +1,13 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Step Validate Health Check App"
+  build:
+    commands:
+      - echo https://app.fnitsolutions.com.br/healthcheck/ready
+
+  post_build:
+    commands:
+      - echo "Step Finish"
