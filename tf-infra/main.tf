@@ -1,6 +1,6 @@
 
 # CRIAÇÃO DO CLUSTER ECS
-module "ecs_cluster_dev" {
+module "app_bff_ecs_cluster" {
   source = "git::https://github.com/felipelima5/metabase-project-ecs-cluster-module.git?ref=1.0.1"
 
   ecs_cluster_name               = "cluster-${terraform.workspace}"
@@ -14,8 +14,10 @@ module "ecs_cluster_dev" {
 }
 
 # CRIAÇÃO DO LOAD BALANCER TO TIPO ALB
-module "alb" {
+module "app_bff_alb" {
   source = "git::https://github.com/felipelima5/metabase-project-alb-module.git?ref=1.0.0"
+
+  depends_on = [module.app_bff_ecs_cluster]
 
   alb_name                   = "alb-metabase"
   internal                   = false
@@ -64,8 +66,10 @@ module "alb" {
 }
 
 
-module "app_metabase_dev" {
+module "app_bff_api" {
     source = "git::https://github.com/felipelima5/metabase-project-ecs-app-module.git?ref=1.0.0"
+
+    depends_on = [module.app_bff_alb]
 
     region           = var.region
     application_name = "metabase-app"
@@ -131,7 +135,7 @@ module "app_metabase_dev" {
 }
 
 
-module "db_rds" {
+module "app_bff_database" {
   source = "git::https://github.com/felipelima5/metabase-project-rds-module.git?ref=1.0.2"
 
   instance_identifier     = "metabase-db"
