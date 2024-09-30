@@ -3,7 +3,7 @@
 module "app_bff_ecs_cluster" {
   source = "git::https://github.com/felipelima5/metabase-project-ecs-cluster-module.git?ref=1.0.1"
 
-  ecs_cluster_name               = "cluster-${terraform.workspace}"
+  ecs_cluster_name               = "5dvpr-${terraform.workspace}"
   logging                        = "OVERRIDE"
   cloud_watch_encryption_enabled = true
   containerInsights              = "enabled"
@@ -66,112 +66,66 @@ module "app_bff_alb" {
 }
 
 
-module "app_bff_api" {
-  source = "git::https://github.com/felipelima5/metabase-project-ecs-app-module.git?ref=1.0.0"
 
-  depends_on = [module.app_bff_alb]
+module "app_bff_service" {
+  source = "git::git::git@github.com:aws-iac-tf-modules/app_ecs.git?ref=v1.0.1"
 
+  env              = "dev"
   region           = var.region
-  application_name = "metabase-app"
-  application_port = 3000 #Port Dockerfile / Application
+  application_name = "service-api"
+  application_port = 80   # Porta da Aplicação será usada para a task Definition e target Group
 
   cloudwatch_log_retention_in_days = 3
 
-  # TASK DEFINITION
+  # PARÂMETROS TASK DEFINITION
   requires_compatibilities                 = "FARGATE"
   network_mode                             = "awsvpc"
-  cpu                                      = 1024
-  memory                                   = 2048
+  cpu                                      = 256
+  memory                                   = 512
   runtime_platform_operating_system_family = "LINUX"
-  runtime_platform_cpu_architecture        = "X86_64" # ARM64
-  container_definitions_image              = "metabase/metabase:latest"
-  container_definitions_cpu                = 1024
-  container_definitions_memory             = 2048
-  container_definitions_memory_reservation = 1024 #Soft Limit
-  container_definitions_essential          = true #Obrigatorio
-  container_definitions_command            = ""   #"nodejs,start"
+  runtime_platform_cpu_architecture        = "X86_64" #---------- X86_64 ou ARM64
+  container_definitions_image              = "nginx:latest"
+  container_definitions_cpu                = 256
+  container_definitions_memory             = 512
+  container_definitions_memory_reservation = 256  # -------------- Soft Limit
+  container_definitions_command            = ""   # No seguinte formato "nodejs,start"
 
-  # Env Variables s3
-  enable_create_s3_bucket         = false
-  enable_versioning_configuration = "Enabled" # Habilitar Versionamento - Preencher apenas se for criar o bucket
-  bucket_env_name                 = "metabase-env-vars-${terraform.workspace}"
-  file_env_name                   = "variables"
-  path_env_name                   = terraform.workspace
+  # PARÂMETROS DO SERVIÇO
+  ecs_cluster_name              = "ecs-cluster"
+  service_desired_count         = 1 
+  scalling_max_capacity         = 2
+  percentual_to_scalling_target = 70
+  time_to_scalling_in           = 300
+  time_to_scalling_out          = 300
 
-  # Service
-  ecs_cluster_name                           = "cluster-${terraform.workspace}"
-  service_desired_count                      = 1 #Quantas Tasks irá subir
-  service_launch_type                        = "FARGATE"
+  capacity_provider_fargate        = "FARGATE"
+  capacity_provider_fargate_weight = 2 # 50% de peso FARGATE OnDemand
+
+  capacity_provider_fargate_spot        = "FARGATE_SPOT"
+  capacity_provider_fargate_spot_weight = 1 # 50% de peso FARGATE Spot
+
   service_deployment_minimum_healthy_percent = 100
   service_deployment_maximum_percent         = 200
   service_assign_public_ip                   = false
   vpc_id                                     = var.vpc_id
   subnets_ids                                = local.subnets
 
-  # LoadBalancer
-  alb_listener_load_balancer_arn = "arn:aws:elasticloadbalancing:us-east-2:111109532426:loadbalancer/app/alb-metabase/d74573d4625e3f06" #ARN do ALB
-  alb_listener_port              = "443"
-  alb_listener_protocol          = "HTTPS"
-  alb_listener_certificate_arn   = "arn:aws:acm:us-east-2:111109532426:certificate/d610afc5-9332-40c7-9c30-04f6d9a6f4e6"
-  alb_listener_host_rule         = "metabase-${terraform.workspace}.keephouseorder.net"
+  
+  #Load Balancer
+  arn_listener_alb             = "arn:aws:elasticloadbalancing:us-east-1:xxxxxxxxxxx:listener/app/alb-dev/345bd28b5164f1ce/b234dce486a6f68d"
+  alb_listener_host_rule       = "app.domain.com.br"
+  priority_rule_listener       = 1
 
   # LoadBalancer TargetGroup
-  target_protocol                         = "HTTP"
-  target_protocol_version                 = "HTTP1"
-  target_deregistration_delay             = 10
-  target_health_check_enable              = true
-  target_health_check_path                = "/"
-  target_health_check_healthy_threshold   = 5
-  target_health_check_unhealthy_threshold = 2
-  target_health_check_timeout             = 5
-  target_health_check_interval            = 30
-  target_health_check_success_code        = "200-499"
+  target_protocol                  = "HTTP"
+  target_protocol_version          = "HTTP1"
+  target_deregistration_delay      = 10
+  target_health_check_path         = "/healthcheck/ready"
+  target_health_check_success_code = "200-499"
 
-  security_group_alb = ["sg-00450cbbb5cb72a86"] #Security Group do LoadBalancer Application que enviará as requests
+  security_group_alb = ["sg-xxxxxxxxxxxxxxx"] #Security Group do LoadBalancer Application que enviará as requests
 
   tags = {
     ManagedBy = "IaC"
   }
 }
-
-
-module "app_bff_database" {
-  source = "git::https://github.com/felipelima5/metabase-project-rds-module.git?ref=1.0.2"
-
-  instance_identifier     = "metabase-db"
-  db_name                 = "metabase"
-  allocated_storage       = 20
-  max_allocated_storage   = 50
-  publicly_accessible     = true
-  engine                  = "mariadb"
-  engine_version          = "10.5"
-  instance_class          = "db.t4g.micro"
-  multi_az                = false
-  username                = "admin"
-  backup_retention_period = 10 #----------(0 - 35 dias)
-  copy_tags_to_snapshot   = true
-  deletion_protection     = false
-  skip_final_snapshot     = true
-  storage_type            = "gp3" # ------(gp2), (gp3), (io1 - mínimo 100gb)
-  iops                    = null  # ------(caso o storage seja io1 ou gp3)
-  storage_encrypted       = true
-  monitoring_interval     = 60
-  parameter_group_family  = "mariadb10.5"
-  vpc_id                  = var.vpc_id
-  subnets_ids             = local.subnets
-
-  security_group_app_ingress_rules = [
-    {
-      description     = "Allow Traffic HTTP 3306"
-      port            = 3306
-      protocol        = "tcp"
-      security_groups = ["sg-010e7087a8d79a47d"] # ECS Service Metabase dev
-    }
-  ]
-
-  aditional_tags = {
-    Env = "Dev"
-  }
-}
-
-
