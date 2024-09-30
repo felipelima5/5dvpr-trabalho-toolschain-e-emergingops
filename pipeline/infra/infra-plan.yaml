@@ -11,10 +11,10 @@ phases:
     commands:
     - eval "export $(aws sts assume-role --role-arn "${IAM_ACCOUNT_ROLE}/${ROLE_NAME}" --role-session-name infradeploy --output text --query='Credentials.[join(`=`, [`AWS_ACCESS_KEY_ID`, AccessKeyId]), join(`=`, [`AWS_SECRET_ACCESS_KEY`, SecretAccessKey]), join(`=`, [`AWS_SESSION_TOKEN`, SessionToken])]')"
     - ls
-    - cd .. && cd tf-infra && terraform init
-    - cd .. && cd tf-infra && terraform workspace select ${ENV}
-    - cd .. && cd tf-infra && terraform init
-    - cd .. && cd tf-infra && terraform plan
+    - cd pipeline/infra && terraform init
+    - cd pipeline/infra && terraform workspace select ${ENV}
+    - cd pipeline/infra && terraform init
+    - cd pipeline/infra && terraform plan
 
   post_build:
     commands:
