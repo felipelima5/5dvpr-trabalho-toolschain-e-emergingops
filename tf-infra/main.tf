@@ -15,7 +15,7 @@ module "app_bff_service" {
   memory                                   = 512
   runtime_platform_operating_system_family = "LINUX"
   runtime_platform_cpu_architecture        = "X86_64" 
-  container_definitions_image              = "111109532426.dkr.ecr.us-east-1.amazonaws.com/api-sample-dev:logger-pino"
+  container_definitions_image              = "111109532426.dkr.ecr.us-east-1.amazonaws.com/bff-api-service:latest"
   container_definitions_cpu                = 256
   container_definitions_memory             = 512
   container_definitions_memory_reservation = 256  
