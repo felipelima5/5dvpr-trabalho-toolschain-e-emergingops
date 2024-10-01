@@ -13,8 +13,8 @@ phases:
     - ls
     - cd tf-infra
     - terraform init
+    - terraform workspace new ${ENV}
     - terraform workspace select ${ENV}
-    - terraform init
     - terraform plan
 
   post_build:
