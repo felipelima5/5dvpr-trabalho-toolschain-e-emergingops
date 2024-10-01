@@ -1,11 +1,11 @@
 variable "region" {
   type    = string
-  default = "us-east-2"
+  default = "us-east-1"
 }
 
 variable "vpc_id" {
   type    = string
-  default = "vpc-0cf93c92f757600de"
+  default = "vpc-0792e4a106f7aeaf5"
 }
 
 variable "subnet_type" {

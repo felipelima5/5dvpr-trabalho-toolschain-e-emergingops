@@ -1,78 +1,9 @@
-
-# CRIAÇÃO DO CLUSTER ECS
-module "app_bff_ecs_cluster" {
-  source = "git::https://github.com/felipelima5/metabase-project-ecs-cluster-module.git?ref=1.0.1"
-
-  ecs_cluster_name               = "5dvpr-${terraform.workspace}"
-  logging                        = "OVERRIDE"
-  cloud_watch_encryption_enabled = true
-  containerInsights              = "enabled"
-  tags = {
-    env       = "${terraform.workspace}"
-    ManagedBy = "IaC"
-  }
-}
-
-# CRIAÇÃO DO LOAD BALANCER TO TIPO ALB
-module "app_bff_alb" {
-  source = "git::https://github.com/felipelima5/metabase-project-alb-module.git?ref=1.0.0"
-
-  depends_on = [module.app_bff_ecs_cluster]
-
-  alb_name                   = "alb-metabase"
-  internal                   = false
-  load_balancer_type         = "application"
-  enable_deletion_protection = false
-  vpc_id                     = var.vpc_id
-  subnets_ids                = local.public_subnets
-
-  enable_create_s3_bucket_log     = false
-  bucket_env_name                 = "log-alb-teste-app-module"
-  access_logs_prefix              = "log-dev"
-  enable_versioning_configuration = "Enabled"
-
-  create_rule_redirect_https = true
-
-  security_group_app_ingress_rules = [
-    {
-      description     = "Allow Traffic HTTP 443"
-      port            = 443
-      protocol        = "tcp"
-      security_groups = []
-      cidr_blocks     = ["0.0.0.0/0"]
-    },
-    {
-      description     = "Allow Traffic HTTP 80"
-      port            = 80
-      protocol        = "tcp"
-      security_groups = []
-      cidr_blocks     = ["0.0.0.0/0"]
-    }
-  ]
-
-  security_group_app_egress_rules = [
-    {
-      description     = "All Traffic"
-      port            = 0
-      protocol        = "-1"
-      security_groups = []
-      cidr_blocks     = ["0.0.0.0/0"]
-    }
-  ]
-
-  aditional_tags = {
-    Env = "Dev"
-  }
-}
-
-
-
 module "app_bff_service" {
-  source = "git::git::git@github.com:aws-iac-tf-modules/app_ecs.git?ref=v1.0.1"
+  source = "git::https://github.com/felipelima5/5dvpr-app-ecs.git?ref=v1.0.0"
 
   env              = "dev"
   region           = var.region
-  application_name = "service-api"
+  application_name = "bff-api-service"
   application_port = 80   # Porta da Aplicação será usada para a task Definition e target Group
 
   cloudwatch_log_retention_in_days = 3
@@ -112,8 +43,8 @@ module "app_bff_service" {
 
   
   #Load Balancer
-  arn_listener_alb             = "arn:aws:elasticloadbalancing:us-east-1:xxxxxxxxxxx:listener/app/alb-dev/345bd28b5164f1ce/b234dce486a6f68d"
-  alb_listener_host_rule       = "app.domain.com.br"
+  arn_listener_alb             = "arn:aws:elasticloadbalancing:us-east-1:111109532426:listener/app/alb/2f7a3e0a42ec9aea/cf25ff56648c0402"
+  alb_listener_host_rule       = "5dvpr.keephouseorder.net"
   priority_rule_listener       = 1
 
   # LoadBalancer TargetGroup
@@ -123,7 +54,7 @@ module "app_bff_service" {
   target_health_check_path         = "/healthcheck/ready"
   target_health_check_success_code = "200-499"
 
-  security_group_alb = ["sg-xxxxxxxxxxxxxxx"] #Security Group do LoadBalancer Application que enviará as requests
+  security_group_alb = ["sg-0f76512cbdee0ee0f"] #Security Group do LoadBalancer Application que enviará as requests
 
   tags = {
     ManagedBy = "IaC"
