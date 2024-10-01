@@ -22,7 +22,7 @@ module "app_bff_service" {
   container_definitions_command            = ""   # No seguinte formato "nodejs,start"
 
   # PARÂMETROS DO SERVIÇO
-  ecs_cluster_name              = "ecs-cluster"
+  ecs_cluster_name              = "prd"
   service_desired_count         = 1 
   scalling_max_capacity         = 2
   percentual_to_scalling_target = 70
