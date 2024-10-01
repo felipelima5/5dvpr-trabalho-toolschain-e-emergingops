@@ -4,7 +4,7 @@ module "app_bff_service" {
   env              = "dev"
   region           = var.region
   application_name = "bff-api-service"
-  application_port = 80   # Porta da Aplicação será usada para a task Definition e target Group
+  application_port = 80   
 
   cloudwatch_log_retention_in_days = 3
 
@@ -14,12 +14,12 @@ module "app_bff_service" {
   cpu                                      = 256
   memory                                   = 512
   runtime_platform_operating_system_family = "LINUX"
-  runtime_platform_cpu_architecture        = "X86_64" #---------- X86_64 ou ARM64
-  container_definitions_image              = "nginx:latest"
+  runtime_platform_cpu_architecture        = "X86_64" 
+  container_definitions_image              = "111109532426.dkr.ecr.us-east-1.amazonaws.com/api-sample-dev:logger-pino"
   container_definitions_cpu                = 256
   container_definitions_memory             = 512
-  container_definitions_memory_reservation = 256  # -------------- Soft Limit
-  container_definitions_command            = ""   # No seguinte formato "nodejs,start"
+  container_definitions_memory_reservation = 256  
+  container_definitions_command            = ""   
 
   # PARÂMETROS DO SERVIÇO
   ecs_cluster_name              = "prd"
@@ -30,10 +30,10 @@ module "app_bff_service" {
   time_to_scalling_out          = 300
 
   capacity_provider_fargate        = "FARGATE"
-  capacity_provider_fargate_weight = 2 # 50% de peso FARGATE OnDemand
+  capacity_provider_fargate_weight = 2 
 
   capacity_provider_fargate_spot        = "FARGATE_SPOT"
-  capacity_provider_fargate_spot_weight = 1 # 50% de peso FARGATE Spot
+  capacity_provider_fargate_spot_weight = 1 
 
   service_deployment_minimum_healthy_percent = 100
   service_deployment_maximum_percent         = 200
@@ -54,7 +54,7 @@ module "app_bff_service" {
   target_health_check_path         = "/healthcheck/ready"
   target_health_check_success_code = "200-499"
 
-  security_group_alb = ["sg-0f76512cbdee0ee0f"] #Security Group do LoadBalancer Application que enviará as requests
+  security_group_alb = ["sg-0f76512cbdee0ee0f"] 
 
   tags = {
     ManagedBy = "IaC"
