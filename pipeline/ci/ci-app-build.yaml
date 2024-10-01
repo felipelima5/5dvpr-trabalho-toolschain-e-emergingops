@@ -13,7 +13,7 @@ phases:
     commands:
     - echo $NEXT_TASK_VERSION
     - echo Building the Docker image...
-    - docker build -t $REPOSITORY_URI:latest .
+    - cd bff-api-5dvpr && docker build -t $REPOSITORY_URI:latest .
 
   post_build:
     commands:
