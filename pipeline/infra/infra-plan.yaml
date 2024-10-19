@@ -1,7 +1,8 @@
 version: 0.2
 
-environmentVariables:
-  BUILD_CREATE_TERRAFORM_WORKSPACE: !Pipeline.CREATE_TERRAFORM_WORKSPACE
+env:
+  variables:
+    CREATE_TERRAFORM_WORKSPACE: "value"
 
 
 phases:
