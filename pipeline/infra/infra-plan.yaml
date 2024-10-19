@@ -15,6 +15,7 @@ phases:
     commands:
     - echo $CREATE_TERRAFORM_WORKSPACE
     - eval "export $(aws sts assume-role --role-arn "${IAM_ACCOUNT_ROLE}/${ROLE_NAME}" --role-session-name infradeploy --output text --query='Credentials.[join(`=`, [`AWS_ACCESS_KEY_ID`, AccessKeyId]), join(`=`, [`AWS_SECRET_ACCESS_KEY`, SecretAccessKey]), join(`=`, [`AWS_SESSION_TOKEN`, SessionToken])]')"
+    - cd tf-infra
     - terraform init
     - chmod +x tf-workspace.sh && ./tf-workspace.sh
     - terraform init
