@@ -1,9 +1,9 @@
 version: 0.2
 phases:
   build:
-      commands:
-          - printf '[{"name":"edm-supervisor-dev-us-east-1","imageUri":"143653603140.dkr.ecr.us-east-1.amazonaws.com/edm-api-dev-us-east-1:latest"}]' > imagedefinitions.json
+    commands:
+    - printf '[{"name":"api_bff_service","imageUri":"111109532426.dkr.ecr.us-east-1.amazonaws.com/bff-api-service:latest"}]' > imagedefinitions.json
 
 artifacts:
   files:
-      - imagedefinitions.json
+  - imagedefinitions.json
