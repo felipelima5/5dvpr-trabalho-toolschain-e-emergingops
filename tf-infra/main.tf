@@ -1,62 +1,159 @@
-module "app_bff_service" {
+module "api_bff_service" {
   source = "git::https://github.com/felipelima5/5dvpr-app-ecs.git?ref=v1.0.0"
 
-  env              = "dev"
   region           = var.region
-  application_name = "bff-api-service"
-  application_port = 80   
+  application_name = "api_bff_service"
+  application_port = 80 # Utilizada na task definition e target group
+  ecs_cluster_name = "prd"
 
-  cloudwatch_log_retention_in_days = 3
+  observability = {
+    cloudwatch_log_retention_in_days = 5
+  }
 
   # PARÂMETROS TASK DEFINITION
-  requires_compatibilities                 = "FARGATE"
-  network_mode                             = "awsvpc"
-  cpu                                      = 256
-  memory                                   = 512
-  runtime_platform_operating_system_family = "LINUX"
-  runtime_platform_cpu_architecture        = "X86_64" 
-  container_definitions_image              = "111109532426.dkr.ecr.us-east-1.amazonaws.com/bff-api-service:latest"
-  container_definitions_cpu                = 256
-  container_definitions_memory             = 512
-  container_definitions_memory_reservation = 256  
-  container_definitions_command            = ""   
+  task_definition = {
+    requires_compatibilities                 = "FARGATE"
+    network_mode                             = "awsvpc"
+    cpu                                      = 256
+    memory                                   = 512
+    runtime_platform_operating_system_family = "LINUX"
+    runtime_platform_cpu_architecture        = "X86_64" # X86_64 / ARM64
+  }
+  container_definitions = {
+    image   = "111109532426.dkr.ecr.us-east-1.amazonaws.com/bff-api-service:latest"
+    cpu     = 256
+    memory  = 512
+    command = ""
+  }
+
 
   # PARÂMETROS DO SERVIÇO
-  ecs_cluster_name              = "prd"
-  service_desired_count         = 1 
-  scalling_max_capacity         = 2
-  percentual_to_scalling_target = 70
-  time_to_scalling_in           = 300
-  time_to_scalling_out          = 300
+  service = {
+    capacity_provider_fargate        = "FARGATE"
+    capacity_provider_fargate_weight = 2 # 50% de peso FARGATE OnDemand
 
-  capacity_provider_fargate        = "FARGATE"
-  capacity_provider_fargate_weight = 2 
+    capacity_provider_fargate_spot        = "FARGATE_SPOT"
+    capacity_provider_fargate_spot_weight = 1 # 50% de peso FARGATE Spot
 
-  capacity_provider_fargate_spot        = "FARGATE_SPOT"
-  capacity_provider_fargate_spot_weight = 1 
+    deployment_minimum_healthy_percent = 100
+    deployment_maximum_percent         = 200
+    assign_public_ip                   = false
+    vpc_id                             = var.vpc_id
+    subnets_ids                        = local.subnets
+  }
 
-  service_deployment_minimum_healthy_percent = 100
-  service_deployment_maximum_percent         = 200
-  service_assign_public_ip                   = false
-  vpc_id                                     = var.vpc_id
-  subnets_ids                                = local.subnets
+  service_scalling = {
+    desired_count                 = 0
+    max_capacity                  = 0
+    percentual_to_scalling_target = 70
+    time_to_scalling_in           = 300
+    time_to_scalling_out          = 300
+  }
 
-  
-  #Load Balancer
-  arn_listener_alb             = "arn:aws:elasticloadbalancing:us-east-1:111109532426:listener/app/alb/2f7a3e0a42ec9aea/cf25ff56648c0402"
-  alb_listener_host_rule       = "5dvpr.keephouseorder.net"
-  priority_rule_listener       = 1
 
-  # LoadBalancer TargetGroup
-  target_protocol                  = "HTTP"
-  target_protocol_version          = "HTTP1"
-  target_deregistration_delay      = 10
-  target_health_check_path         = "/healthcheck/ready"
-  target_health_check_success_code = "200-499"
+  # PARÂMETROS DO LOADBALANCER
+  loadbalancer_application = {
+    arn_listener           = "arn:aws:elasticloadbalancing:us-east-1:111109532426:listener/app/5dvpr-alb-api/b99abeb3120c0b19/c4620ac76abf4c8d"
+    listener_host_rule     = ["api.keephouseorder.net"]
+    listener_paths         = ["/*"]
+    priority_rule_listener = 1
+    security_group         = ["sg-0afbf789de519c309"] #Security Group do LoadBalancer Application que enviará as requests
+  }
 
-  security_group_alb = ["sg-0f76512cbdee0ee0f"] 
+
+  #PARÂMETROS DO TARGET GROUP
+  target_group = {
+    name                      = "api-service"
+    protocol                  = "HTTP"
+    protocol_version          = "HTTP1"
+    deregistration_delay      = 62
+    health_check_path         = "/healthcheck/ready"
+    health_check_success_code = "200-499"
+  }
 
   tags = {
     ManagedBy = "IaC"
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+# CRIAÇÃO DO CLUSTER ECS
+module "app_bff_ecs_cluster" {
+  source = "git::https://github.com/felipelima5/metabase-project-ecs-cluster-module.git?ref=1.0.1"
+
+  ecs_cluster_name               = "5dvpr-${terraform.workspace}"
+  logging                        = "OVERRIDE"
+  cloud_watch_encryption_enabled = true
+  containerInsights              = "enabled"
+  tags = {
+    env       = "${terraform.workspace}"
+    ManagedBy = "IaC"
+  }
+}
+
+# CRIAÇÃO DO LOAD BALANCER TO TIPO ALB
+module "app_bff_alb" {
+  source = "git::https://github.com/felipelima5/metabase-project-alb-module.git?ref=1.0.0"
+
+  depends_on = [module.app_bff_ecs_cluster]
+
+  alb_name                   = "alb-metabase"
+  internal                   = false
+  load_balancer_type         = "application"
+  enable_deletion_protection = false
+  vpc_id                     = var.vpc_id
+  subnets_ids                = local.public_subnets
+
+  enable_create_s3_bucket_log     = false
+  bucket_env_name                 = "log-alb-teste-app-module"
+  access_logs_prefix              = "log-dev"
+  enable_versioning_configuration = "Enabled"
+
+  create_rule_redirect_https = true
+
+  security_group_app_ingress_rules = [
+    {
+      description     = "Allow Traffic HTTP 443"
+      port            = 443
+      protocol        = "tcp"
+      security_groups = []
+      cidr_blocks     = ["0.0.0.0/0"]
+    },
+    {
+      description     = "Allow Traffic HTTP 80"
+      port            = 80
+      protocol        = "tcp"
+      security_groups = []
+      cidr_blocks     = ["0.0.0.0/0"]
+    }
+  ]
+
+  security_group_app_egress_rules = [
+    {
+      description     = "All Traffic"
+      port            = 0
+      protocol        = "-1"
+      security_groups = []
+      cidr_blocks     = ["0.0.0.0/0"]
+    }
+  ]
+
+  aditional_tags = {
+    Env = "Dev"
+  }
+}
+
+*/
+
+
