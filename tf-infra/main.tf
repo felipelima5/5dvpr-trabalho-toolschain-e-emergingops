@@ -1,5 +1,5 @@
 module "api_bff_service" {
-  source = "git::https://github.com/felipelima5/5dvpr-app-ecs.git?ref=v1.0.0"
+  source = "git::https://github.com/felipelima5/5dvpr-app-ecs.git?ref=v2.0.0"
 
   region           = var.region
   application_name = "api_bff_service"
