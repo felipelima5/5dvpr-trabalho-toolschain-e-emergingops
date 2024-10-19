@@ -1,5 +1,9 @@
 version: 0.2
 
+EnvironmentVariables:
+  codepipeline.CREATE_TERRAFORM_WORKSPACE:
+
+
 phases:
   pre_build:
     commands:
