@@ -1,7 +1,8 @@
 version: 0.2
 
-EnvironmentVariables:
-  codepipeline.CREATE_TERRAFORM_WORKSPACE:
+env:
+  variables:
+    CodePipeline.CREATE_TERRAFORM_WORKSPACE:
 
 
 phases:
