@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    CREATE_TERRAFORM_WORKSPACE: ""
+    CREATE_TERRAFORM_WORKSPACE:
 
 phases:
   pre_build:
@@ -14,6 +14,7 @@ phases:
   build:
     commands:
     - eval "export $(aws sts assume-role --role-arn "${IAM_ACCOUNT_ROLE}/${ROLE_NAME}" --role-session-name infradeploy --output text --query='Credentials.[join(`=`, [`AWS_ACCESS_KEY_ID`, AccessKeyId]), join(`=`, [`AWS_SECRET_ACCESS_KEY`, SecretAccessKey]), join(`=`, [`AWS_SESSION_TOKEN`, SessionToken])]')"
+    - echo ${CREATE_TERRAFORM_WORKSPACE}
     - terraform init
     - if [[ "${CREATE_TERRAFORM_WORKSPACE}" == "true" ]]; then terraform workspace new ${ENV} else terraform workspace select "${ENV}" fi
     - terraform init
