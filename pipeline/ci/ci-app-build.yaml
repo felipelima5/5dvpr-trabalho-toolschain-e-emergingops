@@ -7,7 +7,6 @@ phases:
   pre_build:
     commands:
     - echo "Step Build Started"
-    - ls
     - cd app-frontend && npm install
   build:
     commands:
