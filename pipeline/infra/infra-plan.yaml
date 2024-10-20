@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    CREATE_TERRAFORM_WORKSPACE: false
+    CREATE_TERRAFORM_WORKSPACE: true
 
 phases:
   pre_build:
