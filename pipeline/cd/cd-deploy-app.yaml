@@ -6,8 +6,7 @@ phases:
       nodejs: 16
   pre_build:
     commands:
-    - echo "Step Build Started"
-    - cd app-frontend && npm install
+    - echo "Step Deploy Started"
   build:
     commands:
     - mkdir $HOME/.aws
@@ -19,7 +18,10 @@ phases:
     - echo "[${PROFILE}]" >> $HOME/.aws/credentials
     - echo "aws_access_key_id = ${AWS_ACCESS_KEY_ID}" >> $HOME/.aws/credentials
     - echo "aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}" >> $HOME/.aws/credentials
-    - cd app-frontend && npm run build
+    - aws s3 cp --profile ${PROFILE} --recursive ./build s3://${BUCKET_NAME}/
+    - aws cloudfront --profile ${PROFILE} create-invalidation --distribution-id ${ID_CLOUDFRONT} --paths "/*"
   post_build:
     commands:
-    - echo "Step Build Completed"
+    - echo "Step Deploy Completed"
+
+

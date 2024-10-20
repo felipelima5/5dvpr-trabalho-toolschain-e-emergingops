@@ -1,1 +1,0 @@
-docker run -it --name app01 -p 8080:80 a267a5edf3fc

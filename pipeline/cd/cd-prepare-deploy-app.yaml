@@ -1,9 +1,0 @@
-version: 0.2
-phases:
-  build:
-    commands:
-    - printf '[{"name":"api_bff_service","imageUri":"111109532426.dkr.ecr.us-east-1.amazonaws.com/bff-api-service:latest"}]' > imagedefinitions.json
-
-artifacts:
-  files:
-  - imagedefinitions.json

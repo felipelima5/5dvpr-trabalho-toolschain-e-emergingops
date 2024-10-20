@@ -1,28 +1,17 @@
 variable "region" {
   type    = string
-  default = "us-east-1"
+  default = "us-east-2"
 }
 
-variable "vpc_id" {
+variable "bucket_name" {
   type    = string
-  default = "vpc-0792e4a106f7aeaf5"
+  default = "bucket-frontend-5dvpr-delivery-homework-3569870"
 }
 
-variable "subnet_type" {
-  type    = string
-  default = "private"
+variable "tags" {
+  type    = map(string)
+  default = {
+    env = "prod"
+    ManagedBy = "IaC"
+  }
 }
-
-
-variable "subnet_type_public" {
-  type    = string
-  default = "public"
-}
-
-
-
-
-
-
-
-
